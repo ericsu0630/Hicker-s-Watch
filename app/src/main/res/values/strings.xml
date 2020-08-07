@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">HikersWatch</string>
+    <string name="hiker_s_watch">Hiker\'s Watch</string>
+    <string name="latitude">Latitude:</string>
+    <string name="longitude">Longitude:</string>
+    <string name="altitude">Elevation:</string>
+    <string name="accuracy">Accuracy:</string>
+    <string name="address">Address:</string>
+    <string name="update">Update</string>
+    <string name="key">&amp;key=AIzaSyBGrAsDLH9BXUCoTO9Jx-jA2vXReYF_5NQ</string>
+    <string name="api">https://maps.googleapis.com/maps/api/elevation/json?locations=</string>
+</resources>
