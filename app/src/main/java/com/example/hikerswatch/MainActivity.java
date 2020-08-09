@@ -34,7 +34,6 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity {
     LocationManager locationManager;
     LocationListener locationListener;
-    Location loc = null;
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -42,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
         if(requestCode == 0 ){
             if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
                 if(ContextCompat.checkSelfPermission(getApplicationContext(),Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
-                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,100,1,locationListener);
+                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,5000,1,locationListener);
                 }
             }
         }
@@ -87,9 +86,8 @@ public class MainActivity extends AppCompatActivity {
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-                loc = location;
-                Button button = findViewById(R.id.button);
-                getLocation(button);
+                Log.i("Location",location.toString());
+                getLocation(location);
             }
 
             @Override
@@ -108,46 +106,58 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,100,1,locationListener);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,5000,1,locationListener);
+            Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            if(lastKnownLocation == null){
+                lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                if(lastKnownLocation == null){
+                    lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
+                    if(lastKnownLocation == null){
+                        lastKnownLocation = new Location("DEFAULT");
+                        lastKnownLocation.setLatitude(25.033964);
+                        lastKnownLocation.setLongitude(121.564468);
+
+                    }
+                }
+            }
+            Log.i("Last Known Location", lastKnownLocation.toString());
+            getLocation(lastKnownLocation);
         }else{
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},0);
         }
     }
 
-    public void getLocation(View view){
-        if(loc == null){
-            Toast.makeText(this, "No location data", Toast.LENGTH_SHORT).show();
-        }else {
-            TextView latText = findViewById(R.id.latTextView);
-            latText.setText("Latitude: " + String.format("%.5f", loc.getLatitude()));
-            TextView longText = findViewById(R.id.longTextView);
-            longText.setText("Longitude: " + String.format("%.5f", loc.getLongitude()));
-            TextView accText = findViewById(R.id.accTextView);
-            accText.setText("Accuracy: " + String.valueOf(loc.getAccuracy()));
-            TextView eleText = findViewById(R.id.altiTextView);
-            Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
-            DownloadElevation dl = new DownloadElevation();
-            try {
-                List<Address> listOfAddresses = geocoder.getFromLocation(loc.getLatitude(), loc.getLongitude(), 1);
-                if (listOfAddresses != null && listOfAddresses.size() > 0) {
-                    String address = "";
-                    Log.i("Address", listOfAddresses.get(0).toString());
-                    if (listOfAddresses.get(0).getAddressLine(0) != null) {
-                        address += listOfAddresses.get(0).getAddressLine(0);
-                    }
-                    TextView addressText = findViewById(R.id.addressTextView);
-                    addressText.setText(address);
-                    String geturl = getString(R.string.api) + loc.getLatitude() + ","
-                            + loc.getLongitude() + getString(R.string.key);
-                    Log.i("URL", geturl);
-                    String ele = dl.execute(geturl).get();
-                    eleText.setText("Elevation: " + ele + "m");
+    public void getLocation(Location loc){
+        TextView latText = findViewById(R.id.latTextView);
+        latText.setText("Latitude: " + String.format("%.5f", loc.getLatitude()));
+        TextView longText = findViewById(R.id.longTextView);
+        longText.setText("Longitude: " + String.format("%.5f", loc.getLongitude()));
+        TextView accText = findViewById(R.id.accTextView);
+        accText.setText("Accuracy: " + String.valueOf(loc.getAccuracy()));
+        TextView eleText = findViewById(R.id.altiTextView);
+        Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
+        DownloadElevation dl = new DownloadElevation();
+        try {
+            List<Address> listOfAddresses = geocoder.getFromLocation(loc.getLatitude(), loc.getLongitude(), 1);
+            if (listOfAddresses != null && listOfAddresses.size() > 0) {
+                String address = "";
+                Log.i("Address", listOfAddresses.get(0).toString());
+                if (listOfAddresses.get(0).getAddressLine(0) != null) {
+                    address += listOfAddresses.get(0).getAddressLine(0);
                 }
-            } catch (Exception e) {
-                //e.printStackTrace();
-                Log.i("Failed", "Didn't connect");
+                TextView addressText = findViewById(R.id.addressTextView);
+                addressText.setText(address);
+                String geturl = getString(R.string.api) + loc.getLatitude() + ","
+                        + loc.getLongitude() + getString(R.string.key);
+                Log.i("URL", geturl);
+                String ele = dl.execute(geturl).get();
+                eleText.setText("Elevation: " + ele + "m");
+                Toast.makeText(getApplicationContext(), "Location updated", Toast.LENGTH_SHORT).show();
             }
-            Toast.makeText(getApplicationContext(), loc.toString(), Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.i("Failed", "Didn't connect");
+            Toast.makeText(getApplicationContext(), "Unable to get location", Toast.LENGTH_SHORT).show();
         }
     }
 }
