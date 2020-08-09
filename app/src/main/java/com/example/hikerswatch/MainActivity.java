@@ -148,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
                         + loc.getLongitude() + getString(R.string.key);
                 Log.i("URL", geturl);
                 String ele = dl.execute(geturl).get();
-                eleText.setText(getString(R.string.altitude) + ele + "m");
+                eleText.setText(getString(R.string.altitude) + ele);
                 Toast.makeText(getApplicationContext(), "Location updated", Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) {
