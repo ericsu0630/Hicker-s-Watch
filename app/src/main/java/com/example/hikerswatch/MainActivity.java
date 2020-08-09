@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -16,14 +15,10 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
-
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -47,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public class DownloadElevation extends AsyncTask<String, Void, String>{
+    public static class DownloadElevation extends AsyncTask<String, Void, String>{
 
         @Override
         protected String doInBackground(String... strings) {
@@ -58,17 +53,17 @@ public class MainActivity extends AppCompatActivity {
                 InputStream in = httpURLConnection.getInputStream();
                 InputStreamReader reader = new InputStreamReader(in);
                 int data;
-                String json = "";
+                StringBuilder json = new StringBuilder();
                 do{
                     data = reader.read();
                     char c = (char) data;
-                    json += c;
+                    json.append(c);
                 }while(data!=-1);
-                JSONObject jsonObject = new JSONObject(json);
+                JSONObject jsonObject = new JSONObject(json.toString());
                 JSONArray jsonArray = jsonObject.getJSONArray("results");
                 jsonObject = jsonArray.getJSONObject(0);
                 String elevation = jsonObject.getString("elevation");
-                elevation = String.format("%.2f",Double.parseDouble(elevation));
+                elevation = String.format(Locale.getDefault(),"%.2f", Double.parseDouble(elevation));
                 Log.i("Elevation", elevation);
                 return elevation;
             }catch(Exception e){
@@ -128,13 +123,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void getLocation(Location loc){
-        TextView latText = findViewById(R.id.latTextView);
-        latText.setText("Latitude: " + String.format("%.5f", loc.getLatitude()));
-        TextView longText = findViewById(R.id.longTextView);
-        longText.setText("Longitude: " + String.format("%.5f", loc.getLongitude()));
-        TextView accText = findViewById(R.id.accTextView);
-        accText.setText("Accuracy: " + String.valueOf(loc.getAccuracy()));
-        TextView eleText = findViewById(R.id.altiTextView);
+        TextView latText, longText, accText, eleText;
+        latText = findViewById(R.id.latTextView);
+        longText = findViewById(R.id.longTextView);
+        accText = findViewById(R.id.accTextView);
+        eleText = findViewById(R.id.altiTextView);
+        latText.setText(getString(R.string.latitude) + String.format(Locale.getDefault(),"%.5f", loc.getLatitude()));
+        longText.setText(getString(R.string.longitude) + String.format(Locale.getDefault(),"%.5f", loc.getLongitude()));
+        accText.setText(getString(R.string.accuracy) + String.format(Locale.getDefault(),"%.2f", loc.getAccuracy()));
+
         Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
         DownloadElevation dl = new DownloadElevation();
         try {
@@ -151,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
                         + loc.getLongitude() + getString(R.string.key);
                 Log.i("URL", geturl);
                 String ele = dl.execute(geturl).get();
-                eleText.setText("Elevation: " + ele + "m");
+                eleText.setText(getString(R.string.altitude) + ele);
                 Toast.makeText(getApplicationContext(), "Location updated", Toast.LENGTH_SHORT).show();
             }
         } catch (Exception e) {
