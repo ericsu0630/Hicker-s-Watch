@@ -37,6 +37,21 @@ public class MainActivity extends AppCompatActivity {
             if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
                 if(ContextCompat.checkSelfPermission(getApplicationContext(),Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
                     locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,5000,1,locationListener);
+                    Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                    if(lastKnownLocation == null){
+                        lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                        if(lastKnownLocation == null){
+                            lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.PASSIVE_PROVIDER);
+                            if(lastKnownLocation == null){
+                                lastKnownLocation = new Location("DEFAULT");
+                                lastKnownLocation.setLatitude(25.033964);
+                                lastKnownLocation.setLongitude(121.564468);
+
+                            }
+                        }
+                    }
+                    Log.i("Last Known Location", lastKnownLocation.toString());
+                    getLocation(lastKnownLocation);
                 }
             }
         }
